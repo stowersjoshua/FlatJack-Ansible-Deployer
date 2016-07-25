@@ -1,0 +1,14 @@
+---
+- name: install mysql
+  apt: pkg=mysql-server state=latest
+
+- name: Mysql | Set root password
+  shell: debconf-set-selections <<< 'mysql-server mysql-server/root_password password {{ mysql_root_password }}'
+  args:
+    executable: /bin/bash
+
+
+- name: Mysql | Set root repassword
+  shell: debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password {{ mysql_root_password }}'
+  args:
+    executable: /bin/bash

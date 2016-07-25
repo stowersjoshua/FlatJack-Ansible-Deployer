@@ -1,0 +1,57 @@
+---
+- name: kill all the rails servers
+  shell: source "/usr/local/rvm/scripts/rvm" && cd {{ git_loc }} && RAILS_ENV=production passenger stop
+  args:
+    executable: /bin/bash
+  ignore_errors: yes
+
+- name: Create backup directories
+  file: path={{ new_img_loc }} state=directory
+  #file: path={{ new_img_loc_2 }} state=directory
+
+- name: Backup /public to safe location
+  #command: cp -r {{ img_loc }}/* {{ new_img_loc }}
+  shell: cp -r /opt/temp_flat/public/* /opt/public/
+  args:
+    executable: /bin/bash
+  #copy: src={{ img_loc }} {{ new_img_loc }}
+
+- name: Maybe delete repository
+  command: "rm -rf {{ git_loc }}"
+
+- name: Clone Repository
+  git: repo={{ github_repo }} dest={{ git_loc }}
+
+- name: copy env over
+  template: src="env" dest={{ git_loc }}.env
+
+- name: Restore /public from safe location
+  shell: cp -r {{ new_img_loc }}/* {{ img_loc }}
+  args:
+    executable: /bin/bash
+  #copy: src={{ img_loc }} {{ new_img_loc }}
+
+- name: Remove old /public from safe location
+  shell: rm -r {{ new_img_loc }}/*
+  args:
+    executable: /bin/bash
+
+- name: Install Gems
+  shell: source "/usr/local/rvm/scripts/rvm" && cd {{ git_loc }} && bundle install
+  args:
+    executable: /bin/bash
+
+- name: Maybe migrate database?
+  shell: source "/usr/local/rvm/scripts/rvm" && cd {{ git_loc }} && RAILS_ENV=production rake db:migrate
+  when: migrate_database
+  args:
+    executable: /bin/bash
+
+- name: precompile the assets
+  shell: source "/usr/local/rvm/scripts/rvm" && cd {{ git_loc }} && RAILS_ENV=production bundle exec rake assets:precompile
+  args:
+    executable: /bin/bash
+- name: Start rails application in screen session
+  shell: source "/usr/local/rvm/scripts/rvm" && cd {{ git_loc }} && RAILS_ENV=production passenger start --daemonize --port 80 &
+  args:
+    executable: /bin/bash

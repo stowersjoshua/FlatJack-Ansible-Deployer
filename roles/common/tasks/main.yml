@@ -1,0 +1,32 @@
+---
+
+- include: ssh.yml
+
+- name: Install Vim
+  apt: pkg=vim state=latest update_cache=yes
+
+- name: install git yay
+  apt: pkg=git state=latest
+
+- name: install nodejs
+  apt: pkg=nodejs state=latest
+
+- name: install mysql dev stuff
+  apt: pkg=libmysqlclient-dev state=latest
+
+- name: install imagemagick
+  apt: pkg=imagemagick state=latest
+
+- name: Add .vimrc
+  copy: src=vimrc dest=/root/.vimrc
+
+- name: Install fail2ban
+  apt: pkg=fail2ban state=latest
+
+- name: Write fail2ban config file.
+  template: src="fail2ban/jail.conf.j2" dest=/etc/fail2ban/jail.conf
+  notify:
+    - restart fail2ban
+
+- name: Ensure fail2ban is running
+  service: name=fail2ban state=started

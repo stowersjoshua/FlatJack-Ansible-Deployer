@@ -1,0 +1,5 @@
+set nocompatible              " be iMproved, required
+set modeline
+syntax enable
+set colorcolumn=75 " Add a graphical helper to keep code lines short.
+set nu

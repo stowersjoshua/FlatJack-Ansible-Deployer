@@ -1,0 +1,14 @@
+---
+- hosts: web
+  gather_facts: False
+  vars:
+    ansible_ssh_user: root
+  roles:
+    - { role: common, tags: ['common', 'bootstrap'] }
+    - { role: ruby, tags: ['ruby', 'bootstrap'] }
+    - { role: mysql, tags: ['mysql', 'bootstrap'] }
+    - { role: flat_jack, tags: ['flat_jack', 'deploy'] }
+
+    # ansible-playbook -i production flatjack_site.yml --limit="web5" --tags="deploy"
+    # --tags="bootstrap" --skip-tags="mysql"
+    # add more roles here!!

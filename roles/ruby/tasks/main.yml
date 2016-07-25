@@ -1,0 +1,29 @@
+---
+- name: ensure necessary packages are installed
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - curl
+    - gnupg2
+
+- name: ensure that GPG key for RVM is installed
+  command: gpg2 --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
+  args:
+    creates: /root/.gnupg/secring.gpg
+
+- name: ensure that RVM is installed
+  shell: curl -L get.rvm.io | bash -s stable
+  args:
+    creates: /usr/local/rvm
+
+- name: ensure that ruby is installed
+  command: "/usr/local/rvm/bin/rvm install {{ ruby_version }}"
+
+- name: set default version of ruby with rvm
+  command: "/usr/local/rvm/bin/rvm alias create default ruby-{{ ruby_version }}"
+
+- name: Install Bundler Gem
+  shell: source "/usr/local/rvm/scripts/rvm" && gem install bundler
+  args:
+    executable: /bin/bash

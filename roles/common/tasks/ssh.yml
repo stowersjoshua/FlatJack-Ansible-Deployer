@@ -1,0 +1,46 @@
+---
+- name: ssh test nc {{ ssh_port }}
+  local_action: shell nc -z -w5 {{ inventory_hostname }} {{ ssh_port }}
+  register: nc_ssh_port
+  failed_when: nc_ssh_port.stdout.find('failed') != -1
+  changed_when: nc_ssh_port.stdout == ""
+  ignore_errors: yes
+
+# Set port to new port if connection success
+- name: set ansible_ssh_port
+  set_fact: ansible_ssh_port={{ ssh_port }}
+  when: nc_ssh_port|success
+
+# Fail back to old port if new ssh port fails
+- name: ssh test nc port {{ old_ssh_port }}
+  local_action: shell nc -z -w5 {{ inventory_hostname }} {{ old_ssh_port }}
+  register: nc_ssh_default
+  changed_when: nc_ssh_default.stdout == ""
+  ignore_errors: yes
+  when: nc_ssh_port|changed
+
+# Set ansible to old port since new failed
+- name: set ansible_ssh_port to {{ old_ssh_port }}
+  set_fact: ansible_ssh_port={{ old_ssh_port }}
+  when: nc_ssh_default|success and nc_ssh_port|changed
+
+- name: Write openssh config file for alt port.
+  register: sshd_config
+  template: src="openssh/sshd_config.j2" dest=/etc/ssh/sshd_config
+
+# Force changes immediately to ssh
+- name: restart ssh
+  service: name=ssh state=restarted
+  when: sshd_config|changed
+
+# Use updated ssh port
+- name: set ansible_ssh_port
+  set_fact: ansible_ssh_port={{ ssh_port }}
+  when: nc_ssh_port|changed
+
+- name: Add public keys.
+  authorized_key: user=root
+                  key="{{ item }}"
+  with_file:
+    - "public_keys/evan_rax_mac.pub"
+    - "public_keys/josh_mac.pub"

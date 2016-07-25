@@ -1,0 +1,4 @@
+production
+roles/flat_jack/files/.env
+roles/flat_jack/templates/env
+roles/mysql/defaults/main.yml

@@ -1,0 +1,2 @@
+---
+- include: flatjack_servers.yml

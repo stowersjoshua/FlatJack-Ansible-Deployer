@@ -1,0 +1,5 @@
+github_repo: https://github.com/pascbjumper2/FlatJack.git
+git_loc: /opt/temp_flat/
+migrate_database: false
+img_loc: /opt/temp_flat/public/
+new_img_loc: /opt/public/
